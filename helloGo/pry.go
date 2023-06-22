@@ -25,10 +25,18 @@ func main() {
 
 	wg.Add(3)
 
-	nextNumber := getSequence()
-	go fmt.Println(nextNumber())
-	go fmt.Println(nextNumber())
-	go fmt.Println(nextNumber())
+	nextNumber := func(int) func(string) int {
+		i := 1
+		return func(s string) int { // 返回的是一个 func(string) int 的 func
+			i <<= 2
+			fmt.Printf("arg: %s , ret: %v \n", s, i)
+			defer wg.Done() // 保证最后执行
+			return i
+		}
+	}(10) // 最后这个 (10) 进行了func call，得到一个 func(string) int，下面再对 nextNumber call ( nextNumber("str") ) 得到结果
+	go fmt.Printf("for first, ret -> %v \n", nextNumber("first"))
+	go fmt.Printf("for second, ret -> %v \n", nextNumber("second"))
+	go fmt.Printf("for third, ret -> %v \n", nextNumber("third"))
 
 	runtime.Gosched() // 让出时间片
 	wg.Wait()
@@ -57,10 +65,11 @@ func TP[T any](a T) {
 }
 
 // getSequence方法，返回一个 返回类型为int的func
-func getSequence() func() int {
+func getSequence(_ bool) func(string) int {
 	i := 1
-	return func() int {
+	return func(str string) int {
 		i <<= 2
+		fmt.Printf("arg: %s , ret: %v \n", str, i)
 		defer wg.Done() // 保证最后执行
 		return i
 	}
