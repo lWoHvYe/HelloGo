@@ -7,6 +7,7 @@ import (
 func main() {
 	println(fibonacci(2))
 	println(fibonacci2(4))
+	println(fibonacci4(4))
 	println(fibonacciByFormula(6))
 }
 
@@ -96,8 +97,8 @@ func fibonacci4(n int) int {
 		return n
 	}
 
-	p, q, pPrime, qPrime := 0, 1, 1, 1
-	for i := 2; i <= n; i++ {
+	p, q, pPrime, qPrime := 0, 1, 0, 0
+	for i := 2; i <= n; i <<= 1 {
 		pPrime = p*p + q*q
 		qPrime = 2*p*q + q*q
 		p, q = pPrime, qPrime
