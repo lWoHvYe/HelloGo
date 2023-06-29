@@ -1,6 +1,8 @@
 package main
 
-import "math"
+import (
+	"math"
+)
 
 func main() {
 	println(fibonacci(2))
@@ -86,6 +88,22 @@ func fibonacci2(n int) int {
 	}
 
 	return curr
+}
+
+// 另一种迭代法
+func fibonacci4(n int) int {
+	if n <= 1 {
+		return n
+	}
+
+	p, q, pPrime, qPrime := 0, 1, 1, 1
+	for i := 2; i <= n; i++ {
+		pPrime = p*p + q*q
+		qPrime = 2*p*q + q*q
+		p, q = pPrime, qPrime
+	}
+
+	return q
 }
 
 // 斐波那契数列的通项公式如下：
