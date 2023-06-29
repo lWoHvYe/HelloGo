@@ -1,14 +1,21 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"math"
 )
 
 func main() {
-	println(fibonacci(2))
-	println(fibonacci2(4))
-	println(fibonacci4(4))
-	println(fibonacciByFormula(6))
+	fmt.Println(fibonacci(2))
+	fmt.Println(fibonacci2(10))
+	fibN, err := fib(6)
+	if err != nil {
+		fmt.Println("Error:", err)
+	} else {
+		fmt.Println(fibN)
+	}
+	fmt.Println(fibonacciByFormula(6))
 }
 
 // 使用矩阵乘法的方法来计算斐波那契数列，以减少计算步骤的方式。这种方法基于斐波那契数列的递推关系和矩阵乘法的性质。
@@ -91,20 +98,45 @@ func fibonacci2(n int) int {
 	return curr
 }
 
+// p' = p^2 + q^2
+// q' = 2pq + q^2
+// (define (fib n)
+//
+//	(fib-iter 1 0 0 1 n))
+//
+// (define (fib-iter a b p q count)
+//
+//	(cond ((= count 0) b)
+//	      ((even? count)
+//	       (fib-iter a
+//	                 b
+//	                 (+ (square p) (square q))
+//	                 (+ (* 2 p q) (square q))
+//	                 (/ count 2)))
+//	      (else (fib-iter (+ (* b q) (* a q) (* a p))
+//	                      (+ (* b p) (* a q))
+//	                      p
+//	                      q
+//	                      (- count 1)))))
+//
+// (define (square x) (* x x))
+func fib(count int) (int, error) {
+	return fibIter(1, 0, 0, 1, count)
+}
+
 // 另一种迭代法
-func fibonacci4(n int) int {
-	if n <= 1 {
-		return n
+func fibIter(a, b, p, q, count int) (int, error) {
+	if count == 0 {
+		return b, nil
+	} else if count%2 == 0 {
+		pPrime := p*p + q*q
+		qPrime := 2*p*q + q*q
+		return fibIter(a, b, pPrime, qPrime, count>>1)
+	} else if count%2 == 1 {
+		return fibIter(b*q+a*q+a*p, b*p+a*q, p, q, count-1)
+	} else {
+		return 0, errors.New("NaN")
 	}
-
-	p, q, pPrime, qPrime := 0, 1, 0, 0
-	for i := 2; i <= n; i <<= 1 {
-		pPrime = p*p + q*q
-		qPrime = 2*p*q + q*q
-		p, q = pPrime, qPrime
-	}
-
-	return q
 }
 
 // 斐波那契数列的通项公式如下：
