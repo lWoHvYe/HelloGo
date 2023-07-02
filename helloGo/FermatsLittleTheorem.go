@@ -50,6 +50,14 @@ func isPrimeMillerRabin(n *big.Int, iterations int) bool {
 	// 随机数生成器
 	//rand.Seed(time.Now().UnixNano())
 
+	// 检查1取模n的非平凡平方根
+	// In the context of primality testing, if nonTrivialSquareRoot is not nil and is different from 1 and n-1, it means that the number n is composite (non-prime).
+	//This is because a prime number should not have a non-trivial square root modulo n.
+	nonTrivialSquareRoot := big.NewInt(1).ModSqrt(one, n)
+	if nonTrivialSquareRoot != nil && nonTrivialSquareRoot.Cmp(one) != 0 && nonTrivialSquareRoot.Cmp(nMinusOne) != 0 {
+		return false
+	}
+
 	for i := 0; i < iterations; i++ {
 		// 随机选择一个 a，1 < a < n
 		a := big.NewInt(0).Rand(rand.New(rand.NewSource(time.Now().UnixNano())), nMinusOne)
