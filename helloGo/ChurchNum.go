@@ -2,28 +2,31 @@ package main
 
 import "fmt"
 
-type ChurchNumeral func(func(interface{}) interface{}) interface{}
+type FuncL1 func(any) any
+type FuncL2 func(FuncL1) FuncL1
+
+type ChurchNumeral FuncL2
 
 func Zero() ChurchNumeral {
-	return func(f func(interface{}) interface{}) interface{} {
-		return func(x interface{}) interface{} {
+	return func(f FuncL1) FuncL1 {
+		return func(x any) any {
 			return x
 		}
 	}
 }
 
 func AddOne(n ChurchNumeral) ChurchNumeral {
-	return func(f func(interface{}) interface{}) interface{} {
-		return func(x interface{}) interface{} {
-			return f(n(f).(func(interface{}) interface{})(x))
+	return func(f FuncL1) FuncL1 {
+		return func(x any) any {
+			return f(n(f)(x))
 		}
 	}
 }
 
-func ToInt(n ChurchNumeral) interface{} {
-	return n(func(x interface{}) interface{} {
+func ToInt(n ChurchNumeral) any {
+	return n(func(x any) any {
 		return x.(int) + 1
-	}).(func(interface{}) interface{})(0)
+	})(0)
 }
 
 func main() {
