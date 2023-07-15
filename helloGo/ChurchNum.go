@@ -25,7 +25,11 @@ func AddOne(n ChurchNumeral) ChurchNumeral {
 
 func ToInt(n ChurchNumeral) any {
 	return n(func(x any) any {
-		return x.(int) + 1
+		num, ok := x.(int)
+		if ok {
+			return num + 1
+		}
+		panic("Cur input is not a num")
 	})(0)
 }
 
