@@ -1,7 +1,6 @@
 package main
 
 import (
-	"container/heap"
 	"fmt"
 	"runtime"
 	"sync"
@@ -23,40 +22,47 @@ func main() {
 
 	fmt.Println("...go...")
 
-	wg.Add(3)
+	//wg.Add(3)
 
-	nextNumber := func(int) func(string) int {
+	nextNumber := func(in int) func(string) int {
 		i := 1
 		return func(s string) int { // 返回的是一个 func(string) int 的 func
-			i <<= 2
-			fmt.Printf("arg: %s , ret: %v \n", s, i)
+			i <<= in
+			fmt.Printf("in: %v -> arg: %s , ret: %v \n", in, s, i)
 			defer wg.Done() // 保证最后执行
-			return i
+			return i * in
 		}
-	}(10) // 最后这个 (10) 进行了func call，得到一个 func(string) int，下面再对 nextNumber call ( nextNumber("str") ) 得到结果
+	}(2) // 最后这个 (10) 进行了func call，得到一个 func(string) int，下面再对 nextNumber call ( nextNumber("str") ) 得到结果
+
+	wg.Add(1)
 	go fmt.Printf("for first, ret -> %v \n", nextNumber("first"))
+	wg.Add(1)
 	go fmt.Printf("for second, ret -> %v \n", nextNumber("second"))
+	wg.Add(1)
 	go fmt.Printf("for third, ret -> %v \n", nextNumber("third"))
 
 	runtime.Gosched() // 让出时间片
 	wg.Wait()
-	//time.Sleep(100 * time.Microsecond)
+	//time.Sleep(time.Microsecond) // output同样需要时间
 
-	list := []int{49, 38, 65, 97, 76, 13, 27, 49, 55, 04}
-	//fmt.Println(ShellSort(list))
-	//fmt.Println(ShellSort2(list))
-	//fmt.Println(list)
-	//QuickSort(list, 0, len(list)-1)
-	//fmt.Println(list)
+	// 创建一个有缓冲的 Channel，缓冲区大小为 2
+	ch := make(chan int, 2)
 
-	h := &MinHeap{2, 1, 5, 3, 4}
-	heap.Init(h)
-	fmt.Println(h)
-	heap.Push(h, 0)
-	fmt.Println(h)
-	fmt.Println(heap.Pop(h))
+	// 启动一个并发的 Goroutine 发送数据到 Channel
+	go func() {
+		for i := 0; i < 8; i++ {
+			fmt.Println("Sending -> channel:", i)
+			ch <- 1 << i // 发送数据到 Channel
+		}
+		close(ch) // 关闭 Channel
+	}()
 
-	fmt.Println(MergeSort(list))
+	// 主 Goroutine 从 Channel 接收数据
+	for num := range ch {
+		fmt.Println("Receiving <- channel:", num)
+	}
+
+	fmt.Println("Done")
 }
 
 // TP 泛型
@@ -73,191 +79,4 @@ func getSequence(_ bool) func(string) int {
 		defer wg.Done() // 保证最后执行
 		return i
 	}
-}
-
-// ShellSort 希尔排序
-func ShellSort(nums []int) []int {
-	n := len(nums)
-	gap := n / 2
-
-	for gap > 0 {
-		for k := 0; k < gap; k++ {
-			for i := k + gap; i < n; i += gap {
-				temp := nums[i]
-				j := i
-				for j >= gap && nums[j-gap] > temp {
-					nums[j] = nums[j-gap]
-					j -= gap
-				}
-				nums[j] = temp
-			}
-		}
-		gap /= 2
-	}
-
-	return nums
-}
-
-func ShellSort2(nums []int) []int {
-	n := len(nums)
-	gap := 1
-
-	// 计算初始步长
-	for gap < n/3 {
-		gap = 3*gap + 1
-	}
-
-	// 外层循环控制步长
-	for gap > 0 {
-		// 内层循环进行插入排序
-		for i := gap; i < n; i++ {
-			temp := nums[i]
-			j := i - gap
-
-			for j >= 0 && nums[j] > temp {
-				nums[j+gap] = nums[j]
-				j -= gap
-			}
-
-			nums[j+gap] = temp
-		}
-
-		// 更新步长
-		gap = gap / 3
-	}
-
-	return nums
-}
-
-func QuickSort(nums []int, low, high int) {
-	if low < high {
-		pivot := MedianOfThree(nums, low, high) // 使用三数取中法选择枢轴
-		pivots := Partition2(nums, low, high, pivot)
-		QuickSort(nums, low, pivots-1)
-		QuickSort(nums, pivots+1, high)
-	}
-}
-
-func MedianOfThree(nums []int, low, high int) int {
-	mid := low + (high-low)/2
-
-	// 通过比较和交换确保 nums[low] <= nums[mid] <= nums[high]
-	if nums[low] > nums[mid] {
-		nums[low], nums[mid] = nums[mid], nums[low]
-	}
-	if nums[mid] > nums[high] {
-		nums[mid], nums[high] = nums[high], nums[mid]
-	}
-	if nums[low] > nums[mid] {
-		nums[low], nums[mid] = nums[mid], nums[low]
-	}
-
-	return mid // 返回中间元素的index
-}
-
-func Partition(nums []int, low, high, pivot int) int {
-	pivotNum := nums[pivot]
-	nums[pivot], nums[low] = nums[low], nums[pivot]
-
-	for low < high {
-		for low < high && nums[high] >= pivotNum {
-			high--
-		}
-		nums[low] = nums[high]
-		for low < high && nums[low] <= pivotNum {
-			low++
-		}
-		nums[high] = nums[low]
-	}
-
-	nums[low] = pivotNum
-	return low
-}
-
-func Partition2(nums []int, low, high, pivot int) int {
-	// 将枢轴移到最右边
-	nums[high], nums[pivot] = nums[pivot], nums[high]
-
-	for j := low; j < high; j++ {
-		if nums[j] <= nums[high] {
-			nums[low], nums[j] = nums[j], nums[low]
-			low++
-		}
-	}
-
-	// 将枢轴放回正确的位置
-	nums[low], nums[high] = nums[high], nums[low]
-
-	return low // 返回枢轴的位置
-}
-
-// MinHeap 自定义类型
-type MinHeap []int
-
-// Len 实现 heap.Interface 接口的方法
-func (h MinHeap) Len() int {
-	return len(h)
-}
-
-func (h MinHeap) Less(i, j int) bool {
-	return h[i] < h[j]
-}
-
-func (h MinHeap) Swap(i, j int) {
-	h[i], h[j] = h[j], h[i]
-}
-
-func (h *MinHeap) Push(x interface{}) {
-	*h = append(*h, x.(int))
-}
-
-func (h *MinHeap) Pop() interface{} {
-	old := *h
-	n := len(old)
-	x := old[n-1]     // 末尾元素
-	*h = old[0 : n-1] // 不含尾
-	return x
-}
-
-// MergeSort 2路归并排序
-func MergeSort(arr []int) []int {
-	if len(arr) <= 1 {
-		return arr
-	}
-
-	mid := len(arr) >> 1
-	left := MergeSort(arr[:mid]) // 切片
-	right := MergeSort(arr[mid:])
-
-	return merge(left, right)
-}
-
-// 合并两个有序数组
-func merge(left, right []int) []int {
-	result := make([]int, len(left)+len(right))
-	i, j, k := 0, 0, 0
-
-	// 依次比较左右数组的元素，将较小的元素放入结果数组
-	for ; i < len(left) && j < len(right); k++ {
-		if left[i] <= right[j] { // 稳定性
-			result[k] = left[i]
-			i++
-		} else {
-			result[k] = right[j]
-			j++
-		}
-	}
-
-	// 将剩余的元素添加到结果数组
-	for ; i < len(left); k++ {
-		result[k] = left[i]
-		i++
-	}
-
-	for ; j < len(right); k++ {
-		result[k] = right[j]
-		j++
-	}
-
-	return result
 }
