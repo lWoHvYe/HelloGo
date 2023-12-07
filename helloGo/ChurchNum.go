@@ -2,46 +2,43 @@ package main
 
 import "fmt"
 
-type FuncL1 func(any) any
-type FuncL2 func(FuncL1) FuncL1
+type UnaryFunc func(any) any
+type HighOrderFunc func(UnaryFunc) UnaryFunc
+type ChurchNumber HighOrderFunc
 
-type ChurchNumeral FuncL2
-
-func Zero() ChurchNumeral {
-	return func(f FuncL1) FuncL1 {
+func Zero() ChurchNumber {
+	return func(f UnaryFunc) UnaryFunc {
 		return func(x any) any {
 			return x
 		}
 	}
 }
 
-func AddOne(n ChurchNumeral) ChurchNumeral {
-	return func(f FuncL1) FuncL1 {
+func Increment(n ChurchNumber) ChurchNumber {
+	return func(f UnaryFunc) UnaryFunc {
 		return func(x any) any {
 			return f(n(f)(x))
 		}
 	}
 }
 
-func ToInt(n ChurchNumeral) any {
+func ToInteger(n ChurchNumber) any {
 	return n(func(x any) any {
-		num, ok := x.(int)
-		if ok {
+		if num, ok := x.(int); ok {
 			return num + 1
 		}
-		panic("Cur input is not a num")
+		panic("Not a number")
 	})(0)
 }
 
 func main() {
-	zero := Zero()
-	one := AddOne(zero)
-	two := AddOne(one)
-	three := AddOne(two)
+	churchZero := Zero()
+	churchOne := Increment(churchZero)
+	churchTwo := Increment(churchOne)
+	churchThree := Increment(churchTwo)
 
-	fmt.Println("Zero:", ToInt(zero))
-	fmt.Println("One:", ToInt(one))
-	fmt.Println("Two:", ToInt(two))
-	fmt.Println("Three:", ToInt(three))
-
+	fmt.Println("Zero:", ToInteger(churchZero))
+	fmt.Println("One:", ToInteger(churchOne))
+	fmt.Println("Two:", ToInteger(churchTwo))
+	fmt.Println("Three:", ToInteger(churchThree))
 }
