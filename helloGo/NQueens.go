@@ -16,7 +16,7 @@ func solveNQueens(boardSize int) [][]string {
 		queens[i] = -1
 	}
 	columns := map[int]bool{}                                // 列
-	diagonals1, diagonals2 := map[int]bool{}, map[int]bool{} // 两对角，分别满足差相等、和相等
+	diagonals1, diagonals2 := map[int]bool{}, map[int]bool{} // 两对角，分别满足差相等、和相等。这里是map，其key可为负值
 	backtrack(queens, boardSize, 0, columns, diagonals1, diagonals2)
 	return solutions
 }
