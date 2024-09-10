@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/emirpasic/gods/queues/linkedlistqueue"
 	"github.com/emirpasic/gods/stacks/arraystack"
+	"github.com/emirpasic/gods/trees/redblacktree"
 )
 
 func main() {
@@ -22,4 +23,18 @@ func main() {
 	queue.Enqueue(3)
 	value, _ = queue.Dequeue()
 	fmt.Println(value) // 1
+
+	tree := redblacktree.NewWithIntComparator() // 创建一个红黑树
+	tree.Put(1, "a")                            // 插入元素
+	tree.Put(2, "b")
+	tree.Put(3, "c")
+
+	// 查找
+	value, found := tree.Get(2) // 通过 key 查找值
+	if found {
+		fmt.Println("Found:", value)
+	}
+
+	// 删除
+	tree.Remove(2) // 删除元素
 }
