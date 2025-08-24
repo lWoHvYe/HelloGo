@@ -38,3 +38,8 @@ func main() {
 	// 删除
 	tree.Remove(2) // 删除元素
 }
+
+type iterator struct {
+	redblacktree.Iterator
+	count int
+}
